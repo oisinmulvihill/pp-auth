@@ -23,6 +23,8 @@ Description=Summary
 ShortDescription=Summary
 
 needed = [
+    "nose",
+    "coverage",
     "pp-common-db",
 ]
 

@@ -17,12 +17,11 @@ def hash_password(plaintext_password):
 
     """
     if isinstance(plaintext_password, unicode):
-        print "hashpw? "
         password_8bit = plaintext_password.encode('UTF-8')
     else:
         password_8bit = plaintext_password
 
-    print "hash_password password_8bit: ", password_8bit, type(password_8bit)
+    #print "hash_password password_8bit: ", password_8bit, type(password_8bit)
 
     # Salt is ok as sha1 but much stronger sha is going to be used for
     # the actual password.
@@ -62,7 +61,7 @@ def validate_password(plaintext_password, password_hash):
     if isinstance(password_hash, unicode):
         password_hash = password_hash.encode('UTF-8')
 
-    print "validate_password: password_8bit: ", password_8bit, type(password_8bit)
+    #print "validate_password: password_8bit: ", password_8bit, type(password_8bit)
 
     hashed = hashlib.sha512()
     hashed.update(password_8bit + password_hash[:SHA1_SALT_LENGTH])

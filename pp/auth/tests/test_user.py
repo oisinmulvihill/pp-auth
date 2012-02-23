@@ -55,17 +55,16 @@ class UserTC(unittest.TestCase):
 
         plain_password = u"manÃna123"
         hashed_pw = pwtools.hash_password(plain_password)
-        print "hashed_pw: ", hashed_pw, type(hashed_pw)
         self.assertTrue(pwtools.validate_password(plain_password, hashed_pw))
 
         # Fail
         plain_password = u"manÃna123"
         hashed_pw = pwtools.hash_password(plain_password)
-        self.assertTrue(pwtools.validate_password(u"Àôøôò°", hashed_pw))
+        self.assertFalse(pwtools.validate_password(u"Àôøôò°", hashed_pw))
 
         plain_password = u"manÃna123"
         hashed_pw = pwtools.hash_password(plain_password)
-        self.assertTrue(pwtools.validate_password("not the password", hashed_pw))
+        self.assertFalse(pwtools.validate_password("not the password", hashed_pw))
 
 
     def testBasicCRUD(self):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This provides
+This provides password hashing and validate functions which can be
 
 """
 import os

@@ -30,16 +30,47 @@ from pp.common.db.utils import generic_has, generic_get, generic_find, generic_u
 from pp.auth.orm.user_table import UserTable
 
 
-def get_log():
-    return logging.getLogger('pp.auth.user')
+def get_log(fn=''):
+    if fn:
+        fn = ".%s" % fn
+    return logging.getLogger('pp.auth.user%s' % fn)
+
+
 
 # Simple case of all objects being  referenced by their ids
-has = generic_has(UserTable)
-get = generic_get(UserTable)
+has = generic_has(UserTable, 'username')
+has = generic_has(UserTable, 'username')
+get = generic_get(UserTable, 'username')
 find = generic_find(UserTable)
 update = generic_update(UserTable)
-add = generic_add(UserTable)
+g_add = generic_add(UserTable)
 remove = generic_remove(UserTable)
+
+
+class UserPresentError(Exception):
+    """Raised by add when an existing username conflicts with the new one."""
+
+
+def add(**user):
+    """Called to add a new user to the system.
+
+    :param user: This is a dict of fields a user_table.UserTable() can accept.
+
+    The username must not be present in the system already. if
+    it is then UserPresentError will be raised.
+
+    :returns: A new instance of user_table.UserTable.
+
+    """
+    log = get_log('add')
+
+    log.debug("Given user <%s> to add." % user)
+    username = user['username']
+
+    if has(username):
+        raise UserPresentError("The username <%s> is present and cannot be added again." % username)
+
+    return g_add(**user)
 
 
 def count():

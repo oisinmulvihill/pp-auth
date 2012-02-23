@@ -19,47 +19,68 @@ from sqlalchemy.ext.declarative import declarative_base
 from pp.common.db import guid
 from pp.common.db import Base
 from pp.common.db import session
+from pp.auth import pwtools
+
 
 def get_log():
     return logging.getLogger("pp.auth.orm.user")
 
 
 class UserTable(Base):
-    """This represents a user
+    """This represents a user stored on the system.
     """
     __tablename__ = 'user'
 
-    id = Column(sqlalchemy.types.String(36), primary_key=True, nullable=False, index=True)
-    username = Column(sqlalchemy.types.String(200), nullable=False, index=True)
+    id = Column(sqlalchemy.types.String(36), primary_key=True, nullable=False, unique=True)
+    username = Column(sqlalchemy.types.String(200), nullable=False, unique=True)
     password_hash = Column(sqlalchemy.types.String(), nullable=False, index=False)
     display_name = Column(sqlalchemy.types.String(), nullable=True, index=True)
     email = Column(sqlalchemy.types.String(), nullable=True, index=False)
     phone = Column(sqlalchemy.types.String(), nullable=True, index=False)
 
-    # some_foreign_key  = Column(sqlalchemy.types.Integer,     ForeignKey('other_table.id'), nullable=False, index=True)
 
-    # Relations
+    def __init__(self, username, password=None, password_hash=None, display_name='', email='', phone=''):
+        """Create a User instance in the database.
 
-    # Example of a non-lazy-loaded join
-    #attachments = relation(
-    #    "OtherTable",
-    #    primaryjoin='UserTable.id == OtherTale.other_id',
-    #    lazy=False,
-    #)
+        :param username: This is the user's unique name used to log into the system.
 
-    def __init__(self, username, password_hash, display_name=None, email=None, phone=None):
-        """
-        Create a User instance in the database
+        :param password: This is the plain text password, which will be hashed and stored.
+
+        The plain password is NOT stored.
+
+        :param password_hash: This is the prehashed password to be stored.
+
+        If no password and password_hash is given ValueError will be raised as
+        one of the fields must be used.
+
+        :param display_name: The text used instead of the unique username (empty by default).
+
+        :param email: An email address for the user (empty by default).
+
+        :param phone: A phone number the user (empty by default).
+
         """
         self.id = guid()
         self.username = username
-        self.password_hash = password_hash
+
+        # One of these must be provided:
+        if not password and not password_hash:
+            raise ValueError("No password or password_hash provided!")
+
+        # A handy conversion saving the end user from having to do this:
+        if password:
+            self.password_hash = pwtools.hash_password(password)
+        else:
+            self.password_hash = password_hash
+
         self.display_name = display_name
         self.email = email
         self.phone = phone
 
+
     def __repr__(self):
         return "'UserTable <%s>: %s'" % (self.id, self.name)
+
 
 
 def init():
@@ -89,6 +110,7 @@ def destroy():
     # Call any custom destroy hooks here
     get_log().warn("destroy: done.")
 
+
 def dump():
     """
     Called to dump the table to the WidgetStore intermediate format so it
@@ -96,6 +118,7 @@ def dump():
 
     """
     # TODO  FinishMe
+
 
 def load(fieldnames, data):
     """

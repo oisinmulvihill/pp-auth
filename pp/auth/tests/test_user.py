@@ -43,6 +43,47 @@ class UserTC(unittest.TestCase):
         self.session.close()
 
 
+    def test_unicode_fields(self):
+        """Test the entry of unicode username, email, display name.
+        """
+        username = u'andrés.bolívar'
+
+        self.assertEquals(user.count(), 0)
+        self.assertEquals(user.find(username=username), [])
+
+        plain_pw = u'í12345í67890é'
+
+        user_dict = dict(
+            username=username,
+            password=plain_pw,
+            display_name=u'Andrés Plácido Bolívar',
+            email=u'andrés.bolívar@example.com',
+            phone=u''
+        )
+        item1 = user.add(**user_dict)
+
+        # Check the password is converted into a hashed password correctly:
+        is_validate = item1.validate_password(plain_pw)
+        self.assertTrue(is_validate)
+
+        # Try recoving by username, display_name, etc
+        #
+        for field in user_dict:
+            if field == "password":
+                # skip and no such thing as find via password although by
+                # hash should in theory work.
+                continue
+
+            items = user.find(**{field:user_dict[field]})
+            self.assertEquals(items, [item1,])
+            item1 = items[0]
+            self.assertEquals(item1.username, user_dict['username'])
+            self.assertEquals(item1.display_name, user_dict['display_name'])
+            self.assertEquals(item1.email, user_dict['email'])
+            self.assertEquals(item1.phone, user_dict['phone'])
+
+
+
     def test_password_tools(self):
         """Test the password tools available in pwtools module.
         """
@@ -103,6 +144,8 @@ class UserTC(unittest.TestCase):
         )
         item1 = user.add(**user_dict)
 
+        self.assertEquals(str(item1), "'UserTable <%s>: %s'" % (item1.id, item1.username))
+
         # Check the password is converted into a hashed password correctly:
         is_validate = pwtools.validate_password(plain_pw, item1.password_hash)
         self.assertTrue(is_validate)
@@ -132,4 +175,7 @@ class UserTC(unittest.TestCase):
         self.assertEquals(user.has(item2.id), False)
 
         self.assertRaises(utils.DBRemoveError, user.remove, item2.id)
+
+
+
 

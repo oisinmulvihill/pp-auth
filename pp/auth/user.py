@@ -36,19 +36,23 @@ def get_log(fn=''):
     return logging.getLogger('pp.auth.user%s' % fn)
 
 
-
-# Simple case of all objects being  referenced by their ids
-has = generic_has(UserTable, 'username')
+# Username is unique and the common method of account recovery:
 has = generic_has(UserTable, 'username')
 get = generic_get(UserTable, 'username')
+
 find = generic_find(UserTable)
+
 update = generic_update(UserTable)
-g_add = generic_add(UserTable)
+
 remove = generic_remove(UserTable)
 
 
 class UserPresentError(Exception):
     """Raised by add when an existing username conflicts with the new one."""
+
+
+# Used by add after performing checks:
+g_add = generic_add(UserTable)
 
 
 def add(**user):
@@ -70,31 +74,33 @@ def add(**user):
     if has(username):
         raise UserPresentError("The username <%s> is present and cannot be added again." % username)
 
+    log.debug("The username <%s> is not present already. OK to add." % username)
+
     return g_add(**user)
 
 
 def count():
-    """
-    Example method showing session simple read handling
-    """
+    """Return the number of users on the system."""
     s = session()
     query = s.query(UserTable)
     return query.count()
 
 
-def transform(attr_name, transformer):
-    """
-    Example method showing commits
-    """
-    s = session()
-    query = s.query(UserTable)
-    for item in query.all():
-        # Recover an attribute
-        attr = getattr(item, attr_name)
+# to remove
+#
+# def transform(attr_name, transformer):
+#     """
+#     Example method showing commits
+#     """
+#     s = session()
+#     query = s.query(UserTable)
+#     for item in query.all():
+#         # Recover an attribute
+#         attr = getattr(item, attr_name)
 
-        # Transform it and set it back on the object
-        setattr(item, attr_name, transformer(attr))
+#         # Transform it and set it back on the object
+#         setattr(item, attr_name, transformer(attr))
 
-    # Commit the changes
-    query.commit()
+#     # Commit the changes
+#     query.commit()
 

@@ -22,9 +22,6 @@ from pp.common.db import session
 from pp.auth import pwtools
 
 
-def get_log():
-    return logging.getLogger("pp.auth.orm.user")
-
 
 class UserTable(Base):
     """This represents a user stored on the system.
@@ -95,7 +92,7 @@ class UserTable(Base):
 
 
     def __repr__(self):
-        return "'UserTable <%s>: %s'" % (self.id, self.name)
+        return "'UserTable <%s>: %s'" % (self.id, self.username)
 
 
 

@@ -78,6 +78,22 @@ class UserTable(Base):
         self.phone = phone
 
 
+    def validate_password(self, plain_text):
+        """Called to validate the given password.
+
+        :param password: This is plain text of the user.
+
+        The password will be hashed and the result compared against
+        the stored password_hash.
+
+        This is a convenience wrapper around pwtools.validate_password.
+
+        :returns: True for password is valid.
+
+        """
+        return pwtools.validate_password(plain_text, self.password_hash)
+
+
     def __repr__(self):
         return "'UserTable <%s>: %s'" % (self.id, self.name)
 

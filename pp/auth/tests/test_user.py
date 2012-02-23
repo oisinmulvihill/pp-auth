@@ -107,6 +107,10 @@ class UserTC(unittest.TestCase):
         is_validate = pwtools.validate_password(plain_pw, item1.password_hash)
         self.assertTrue(is_validate)
 
+        # Check the convenience method on the user instance:
+        is_validate = item1.validate_password(plain_pw)
+        self.assertTrue(is_validate)
+
         # Make sure I cannot add the same username again:
         self.assertRaises(user.UserPresentError, user.add, **user_dict)
 
@@ -114,13 +118,12 @@ class UserTC(unittest.TestCase):
         self.assertEquals(user.has(username), True)
         self.assertEquals(user.count(), 1)
 
-        user_bob = user.get(username=username)
+        item2 = user.get(username)
 
         self.assertEquals(item2.username, user_dict['username'])
-        self.assertEquals(item2.password_hash, user_dict[''])
-        self.assertEquals(item2.display_name, user_dict[''])
-        self.assertEquals(item2.email, user_dict[''])
-        self.assertEquals(item2.phone, user_dict[''])
+        self.assertEquals(item2.display_name, user_dict['display_name'])
+        self.assertEquals(item2.email, user_dict['email'])
+        self.assertEquals(item2.phone, user_dict['phone'])
 
         user.remove(item2.id)    # remove just by id
 

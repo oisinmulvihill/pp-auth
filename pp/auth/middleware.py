@@ -1,118 +1,127 @@
-import os
-import os.path
 import logging
+from collections import defaultdict
 
 from repoze.what.middleware import setup_auth
 # We need to set up the repoze.who components used by repoze.what for
 # authentication
-from repoze.who.plugins.basicauth import BasicAuthPlugin
+#from repoze.who.plugins.basicauth import BasicAuthPlugin
 
-# We'll use group and permission based exclusively on INI files
-from repoze.what.plugins.ini import INIGroupAdapter
-from repoze.what.plugins.ini import INIPermissionsAdapter
 #from repoze.who.plugins.friendlyform import FriendlyFormPlugin
 from repoze.who.plugins.form import RedirectingFormPlugin
 from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 
-from authenticators import PlainAuthenticatorMetadataProvider
+from plugins import plain
 
+#from plu import PlainAuthenticatorMetadataProvider, get_plain_auth_from_config
 
 def get_log():
     return logging.getLogger('pp.auth.middleware')
 
 
-def add_auth_from_config(app, config, settings, prefix="commonauth."):
+# Map plugins their builder methods
+PLUGINS = {
+    'authenticators' : {
+        'plain' : plain.get_auth_from_config,   
+    },
+    'mdproviders' : {
+        'plain' : plain.get_auth_from_config,    # TODO make these map to the same object 
+    },
+    'groups' : {
+        'plain' : plain.get_groups_from_config,
+    },
+    'permissions' : {
+        'plain' : plain.get_permissions_from_config,
+    },
+}
+
+
+def add_auth_from_config(app, settings, prefix="repoze.who."):
     """ 
     Call add_auth, using settings gathered from a settings dictionary
     :param app: The WSGI application.
-    :param config: Pyramid Configurator
     :param settings: Settings dict
     :param prefix: Settings variable prefix
+
+    Example settings file::
+
+        # Repoze plugin config 
+        repoze.who.authenticators = plain
+        repoze.who.mdproviders = plain
+        repoze.who.groups = plain
+        repoze.who.permissions = plain
+
+        # Plain auth plugin
+        pp.auth.plain.password_file = %(here)s/auth/passwd.csv
+        pp.auth.plain.groups_file = %(here)s/auth/groups.ini
+        pp.auth.plain.permissions_file = %(here)s/auth/permissions.ini
+
+        # Cookies and login handlers
+        pp.auth.cookie_name = auth_cookie
+        pp.auth.cookie_secret = 07cafeee-ef19-4a1c-aab2-61fefbad85f4
+        pp.auth.login_url = /login
+        pp.auth.login_handler_url = /login_handler
+
     """
+    # Mandatory settings
     site_name = settings.get('%ssite_name' % prefix,'')
     cookie_name = settings['%scookie_name' % prefix]
     cookie_secret = settings['%scookie_secret' % prefix]
-    password_file = settings['%spassword_file' % prefix]
-    groups_file = settings['%sgroups_file' % prefix]
-    permissions_file = settings['%spermissions_file' % prefix]
     login_url = settings.get('%slogin_url' % prefix, '/login')
     login_handler_url = settings.get('%slogin_handler_url' % prefix, '/login_handler')
 
-    return add_auth(app, config, site_name, cookie_name, cookie_secret, password_file, 
-             groups_file, permissions_file, login_url, login_handler_url)
+    # Build plugins to pass into repoze
+    plugins = defaultdict(list)
+    for plugin_type in ('authenticators', 'mdproviders', 'groups', 'permissions'):
+        ids = settings[prefix + plugin_type].split(',')
+        for plugin_id in ids:
+            if not plugin_id in PLUGINS[plugin_type]:
+                raise ValueError("Unknown %s: %r" % (plugin_type, plugin_id))
+            get_log().info("add_auth_from_config: loading %s plugin: %s" % (plugin_type, plugin_id))
+            plugins[plugin_type].append((plugin_id, PLUGINS[plugin_type][plugin_id](settings)))
 
+    return add_auth(app, site_name, cookie_name, cookie_secret,  login_url, login_handler_url,
+                    **plugins)
 
-def add_auth(app, config, site_name, cookie_name, cookie_secret, password_file, 
-             groups_file, permissions_file, login_url='login', 
-             login_handler_url='login_handler'):
+def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handler_url, 
+             authenticators, mdproviders, groups, permissions):
     """
     Add authentication and authorization middleware to the ``app``.
 
     :param app: The WSGI application.
-    :param config: Pyramid Configurator
     :param site_name: the site name used in basic auth box.
     :param cookie_name: basic auth name and cookie name.
     :param cookie_secret: unique secret string used to protect sessions.
-    :param groups_file: the ini file source for the groups information.
-    :param passwd_file: the ini file source for the permission information.
     :param login_url: the url for the login page
     :param login_handler_url: the url for the login handler
+    :param authenticators: list of authenticator plugins
+    :param mdproviders: list of mdprovider plugins
+    :param groups: list of groups plugins
+    :param permissions: list of permissions plugins
     :return: The same WSGI application, with authentication and
         authorization middleware.
         
     """
 
-    get_log().info("add_auth: adding user/group/permission file based setup.")
+    get_log().info("add_auth: intialising Repoze")
 
-    if not os.path.isfile(password_file):
-        raise ValueError("Unable to find password file '%s'!" % password_file)
-    else:
-        user_data_file = os.path.abspath(password_file)
+    if not authenticators:
+        raise ValueError("No authenticators provided")
+    if not mdproviders:
+        raise ValueError("No mdproviders provided")
+    if not groups:
+        raise ValueError("No groups provided")
+    if not permissions:
+        raise ValueError("No permissions provided")
 
-    if not os.path.isfile(groups_file):
-        raise ValueError("Unable to find groups file '%s'!" % groups_file)
-    else:
-        groups = os.path.abspath(groups_file)
-        
-    if not os.path.isfile(permissions_file):
-        raise ValueError("Unable to find password file '%s'!" % permissions_file)
-    else:
-        permissions = os.path.abspath(permissions_file)
-    
-    basicauth = BasicAuthPlugin(site_name)
-
-    # Recover the User details and load it for the CSV repoze plugin to handle:
-    fd = open(user_data_file, 'r')
-    user_data = fd.read()
-    fd.close()
-    plain_auth = PlainAuthenticatorMetadataProvider(user_data)
-                   
-    # Build web form plugin
-               
-    #post_login_url = None
-    #logout_handler = None
-    #post_logout_url = None
-    #login_counter_name = None
-    #form = FriendlyFormPlugin(
-    #    login_url,
-    #    login_handler_url,
-    #    post_login_url,
-    #    logout_handler,
-    #    post_logout_url,
-    #    login_counter_name=login_counter_name,
-    #    rememberer_name='cookie',
-    #    charset='utf-8',
-    #)
-
+    # If we ever change default behavior for challengers and identifiers, move these 
+    # to the above function
     logout_handler = None
-
     form = RedirectingFormPlugin(
         login_url,
         login_handler_url,
         logout_handler,
         rememberer_name='cookie',
     )
-
 
     cookie = AuthTktCookiePlugin(cookie_secret, cookie_name)
 
@@ -122,20 +131,18 @@ def add_auth(app, config, site_name, cookie_name, cookie_secret, password_file,
 
     #challengers = [('form', form), ('basicauth', basicauth)]
     #challengers = [('basicauth', basicauth)]
-
     challengers = [('form', form)] 
 
-    authenticators = [('htpasswd', plain_auth)]
-
-    mdproviders = [('simplemeta', plain_auth)]
-
-    groups = {'all_groups': INIGroupAdapter(groups)}
-    permissions = {'all_perms': INIPermissionsAdapter(permissions)}
-
+    #get_log().info(dict(groups))
+    #get_log().info(    dict(permissions))
+    #get_log().info(    identifiers)
+    #get_log().info(    authenticators)
+    #get_log().info(    challengers )
+    #get_log().info(    mdproviders)
     app_with_auth = setup_auth(
         app = app,
-        group_adapters = groups,
-        permission_adapters = permissions, 
+        group_adapters = dict(groups),  # why these are dicts where all the other are lists... 
+        permission_adapters = dict(permissions), 
         identifiers = identifiers, 
         authenticators = authenticators,
         challengers = challengers, 

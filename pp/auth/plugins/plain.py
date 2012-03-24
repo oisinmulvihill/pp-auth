@@ -1,9 +1,9 @@
 """
-:mod:`authenticators` --- authenticators for repoze.who
+:mod:`plain` --- plain authenticators for repoze.who
 ====================================
 
 .. module:: plain
-   :synopsis: provides handy functions...
+   :synopsis: provides plain authenticator, groups and permissions
    
 .. moduleauthor:: Oisin Mulvihill<oisin@foldingsoftware.com>
 .. sectionauthor:: Oisin Mulvihill<oisin@foldingsoftware.com>
@@ -11,14 +11,18 @@
 .. versionadded:: 1.0
 
 """
+import os
 import csv
 import logging
 import StringIO
 
-from pwtools import validate_password
+from repoze.what.plugins.ini import INIGroupAdapter
+from repoze.what.plugins.ini import INIPermissionsAdapter
+
+from pp.auth.pwtools import validate_password
 
 def get_log():
-    return logging.getLogger('pp.auth.authenticators')
+    return logging.getLogger('pp.auth.plugins.plain')
 
 
 class PlainAuthenticatorMetadataProvider(object):
@@ -120,4 +124,38 @@ class PlainAuthenticatorMetadataProvider(object):
         if info is not None:
             identity.update(info)
 
+
+def get_auth_from_config(settings, prefix="pp.auth.plain."):
+    """
+    Return a `PlainAuthenticatorMetadataProvider` from a settings dict
+    """
+    password_file = settings['%spassword_file' % prefix]
+    if not os.path.isfile(password_file):
+        raise ValueError("Unable to find password file '%s'!" % password_file)
+
+    # Recover the User details and load it for the CSV repoze plugin to handle:
+    with open(os.path.abspath(password_file), 'r') as fp:
+       return (PlainAuthenticatorMetadataProvider(fp.read()))
+
+
+def get_groups_from_config(settings, prefix="pp.auth.plain."):
+    """
+    Return a groups `INIGroupAdapter` from a settings dict
+    """
+    groups_file = settings['%sgroups_file' % prefix]
+    if not os.path.isfile(groups_file):
+        raise ValueError("Unable to find groups file '%s'!" % groups_file)
+
+    return INIGroupAdapter(groups_file)
+
+
+def get_permissions_from_config(settings, prefix="pp.auth.plain."):
+    """
+    Return a permissions `INIGroupAdapter` from a settings dict
+    """
+    permissions_file = settings['%spermissions_file' % prefix]
+    if not os.path.isfile(permissions_file):
+        raise ValueError("Unable to find permissions file '%s'!" % permissions_file)
+
+    return INIGroupAdapter(permissions_file)
 

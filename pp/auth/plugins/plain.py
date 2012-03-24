@@ -157,5 +157,5 @@ def get_permissions_from_config(settings, prefix="pp.auth.plain."):
     if not os.path.isfile(permissions_file):
         raise ValueError("Unable to find permissions file '%s'!" % permissions_file)
 
-    return INIGroupAdapter(permissions_file)
+    return INIPermissionsAdapter(permissions_file)
 

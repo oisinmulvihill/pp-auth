@@ -3,9 +3,7 @@
 This tests the product table methods
 Edward Easton, Oisin Mulvihill
 """
-import pprint
 import unittest
-import datetime
 
 from pp.common.db import session, dbsetup
 from pp.common.db import utils
@@ -25,7 +23,7 @@ class UserTC(unittest.TestCase):
         #dbsetup.init("sqlite:///testdata.db")
         #
         # Stick with in memory for the moment:
-        dbsetup.init("sqlite:///:memory:")
+        dbsetup.init("sqlite:///:memory:", use_transaction=False)
 
         dbsetup.create()
 
@@ -81,37 +79,6 @@ class UserTC(unittest.TestCase):
             self.assertEquals(item1.display_name, user_dict['display_name'])
             self.assertEquals(item1.email, user_dict['email'])
             self.assertEquals(item1.phone, user_dict['phone'])
-
-
-
-    def test_password_tools(self):
-        """Test the password tools available in pwtools module.
-        """
-        # Success
-        plain_password = "11amcoke"
-        hashed_pw = pwtools.hash_password(plain_password)
-        self.assertTrue(pwtools.validate_password(plain_password, hashed_pw))
-
-        plain_password = "  11amcoke"
-        hashed_pw = pwtools.hash_password(plain_password)
-        self.assertTrue(pwtools.validate_password(plain_password, hashed_pw))
-
-        plain_password = "  11amcoke  "
-        hashed_pw = pwtools.hash_password(plain_password)
-        self.assertTrue(pwtools.validate_password(plain_password, hashed_pw))
-
-        plain_password = u"manÃna123"
-        hashed_pw = pwtools.hash_password(plain_password)
-        self.assertTrue(pwtools.validate_password(plain_password, hashed_pw))
-
-        # Fail
-        plain_password = u"manÃna123"
-        hashed_pw = pwtools.hash_password(plain_password)
-        self.assertFalse(pwtools.validate_password(u"Àôøôò°", hashed_pw))
-
-        plain_password = u"manÃna123"
-        hashed_pw = pwtools.hash_password(plain_password)
-        self.assertFalse(pwtools.validate_password("not the password", hashed_pw))
 
 
     def testBasicCRUD(self):

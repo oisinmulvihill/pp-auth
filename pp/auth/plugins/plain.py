@@ -19,10 +19,22 @@ import StringIO
 from repoze.what.plugins.ini import INIGroupAdapter
 from repoze.what.plugins.ini import INIPermissionsAdapter
 
-from pp.auth.pwtools import validate_password
+from pp.auth import pwtools
 
 def get_log():
     return logging.getLogger('pp.auth.plugins.plain')
+
+
+def register():
+    """
+    Returns registration info for pp.auth
+    """
+    return {
+        'authenticators' : get_auth_from_config,
+        'mdproviders' : get_auth_from_config,
+        'groups' : get_groups_from_config,
+        'permissions' : get_permissions_from_config,
+    }
 
 
 class PlainAuthenticatorMetadataProvider(object):
@@ -100,7 +112,7 @@ class PlainAuthenticatorMetadataProvider(object):
         get_log().info("authenticate: found user: %r" % user)
         if user:
             #print "user '%s' hpw '%s'" % (user,user['password'])
-            if validate_password(password, user['password']):
+            if pwtools.validate_password(password, user['password']):
                 returned = user['username']
                 get_log().info("authenticate: validated  user: %r" % returned)
             else:

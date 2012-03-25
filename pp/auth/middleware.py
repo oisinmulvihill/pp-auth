@@ -1,41 +1,73 @@
 import logging
 from collections import defaultdict
 
+import importlib
 from repoze.what.middleware import setup_auth
-# We need to set up the repoze.who components used by repoze.what for
-# authentication
-#from repoze.who.plugins.basicauth import BasicAuthPlugin
-
-#from repoze.who.plugins.friendlyform import FriendlyFormPlugin
 from repoze.who.plugins.form import RedirectingFormPlugin
 from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
+#from repoze.who.plugins.basicauth import BasicAuthPlugin
+#from repoze.who.plugins.friendlyform import FriendlyFormPlugin
 
-from plugins import plain
-
-#from plu import PlainAuthenticatorMetadataProvider, get_plain_auth_from_config
 
 def get_log():
     return logging.getLogger('pp.auth.middleware')
 
 
-# Map plugins their builder methods
-PLUGINS = {
-    'authenticators' : {
-        'plain' : plain.get_auth_from_config,   
-    },
-    'mdproviders' : {
-        'plain' : plain.get_auth_from_config,    # TODO make these map to the same object 
-    },
-    'groups' : {
-        'plain' : plain.get_groups_from_config,
-    },
-    'permissions' : {
-        'plain' : plain.get_permissions_from_config,
-    },
-}
+PLUGIN_TYPES = ('authenticators', 'mdproviders', 'groups', 'permissions')
+
+def get_plugin_registry(settings, prefix="pp.auth."):
+    """
+    Get a registry of all the things that the configured plugins provide, mapping
+    the plugin type to a method tha builds the plugin from the settings dict. 
+    The default response using the 'plain' plugin is this::
+
+        plugin_registry = {
+            'authenticators' : {
+                'plain' : plain.get_auth_from_config,   
+            },
+            'mdproviders' : {
+                'plain' : plain.get_auth_from_config,
+            },
+            'groups' : {
+                'plain' : plain.get_groups_from_config,
+            },
+            'permissions' : {
+                'plain' : plain.get_permissions_from_config,
+            },
+        }
+    """
+    res = dict(list((i, {}) for i in PLUGIN_TYPES))
+
+    # Find plugins we've been asked to configure
+    plugin_mods = settings.get('%splugins' % prefix, 'pp.auth.plugins.plain').split(',')
+
+    for mod in [importlib.import_module(i.strip()) for i in plugin_mods]:
+        # Use the last part of the plugin's module name as its ID. 
+        plugin_id = mod.__name__.split('.')[-1]
+        get_log().info("get_plugin_registry: found plugin %r: %r" % (plugin_id, mod))
+        provides = mod.register()
+        for plugin_type in PLUGIN_TYPES:
+            res[plugin_type].update({plugin_id: provides[plugin_type]})
+    return res
 
 
-def add_auth_from_config(app, settings, prefix="repoze.who."):
+def build_plugins(settings, plugin_registry, prefix="pp.auth."):
+    """
+    Builds all the plugins we've been asked to configure in the settings
+    """
+    res = defaultdict(list)
+    for plugin_type in PLUGIN_TYPES:
+        ids = [i.strip() for i in settings[prefix + plugin_type].split(',')]
+        for plugin_id in ids:
+            if not plugin_id in plugin_registry[plugin_type]:
+                raise ValueError("Unknown %s: %r" % (plugin_type, plugin_id))
+
+            get_log().info("add_auth_from_config: loading %s plugin: %s" % (plugin_type, plugin_id))
+            res[plugin_type].append((plugin_id, plugin_registry[plugin_type][plugin_id](settings)))
+    return res
+
+
+def add_auth_from_config(app, settings, prefix="pp.auth."):
     """ 
     Call add_auth, using settings gathered from a settings dictionary
     :param app: The WSGI application.
@@ -69,16 +101,12 @@ def add_auth_from_config(app, settings, prefix="repoze.who."):
     login_url = settings.get('%slogin_url' % prefix, '/login')
     login_handler_url = settings.get('%slogin_handler_url' % prefix, '/login_handler')
 
-    # Build plugins to pass into repoze
-    plugins = defaultdict(list)
-    for plugin_type in ('authenticators', 'mdproviders', 'groups', 'permissions'):
-        ids = settings[prefix + plugin_type].split(',')
-        for plugin_id in ids:
-            if not plugin_id in PLUGINS[plugin_type]:
-                raise ValueError("Unknown %s: %r" % (plugin_type, plugin_id))
-            get_log().info("add_auth_from_config: loading %s plugin: %s" % (plugin_type, plugin_id))
-            plugins[plugin_type].append((plugin_id, PLUGINS[plugin_type][plugin_id](settings)))
+    # This is a registry of all the things that the configured plugins provide
+    plugin_registry = get_plugin_registry(settings, prefix)
 
+    # These are all the built plugins that we'e been configured to use
+    plugins = build_plugins(settings, plugin_registry, prefix)
+    
     return add_auth(app, site_name, cookie_name, cookie_secret,  login_url, login_handler_url,
                     **plugins)
 

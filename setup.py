@@ -25,6 +25,9 @@ ShortDescription=Summary
 needed = [
     "mock",
     "pp-common-db",
+    "repoze.who==1.0.19",
+    "repoze.what==1.0.9",
+    "repoze.what.plugins.ini==0.2.2",
 ]
 
 test_needed = [

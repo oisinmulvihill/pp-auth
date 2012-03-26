@@ -51,7 +51,7 @@ PackageData = {
 # Example console script and paster template integration:
 EntryPoints = {
     'console_scripts': [
-        'authapp = pp.auth.scripts.main:main',
+        #'authapp = pp.auth.scripts.main:main',
     ],
 }
 

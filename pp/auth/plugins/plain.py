@@ -4,7 +4,7 @@
 
 .. module:: plain
    :synopsis: provides plain authenticator, groups and permissions
-   
+
 .. moduleauthor:: Oisin Mulvihill<oisin@foldingsoftware.com>
 .. sectionauthor:: Oisin Mulvihill<oisin@foldingsoftware.com>
 
@@ -21,6 +21,7 @@ from repoze.what.plugins.ini import INIPermissionsAdapter
 
 from pp.auth import pwtools
 
+
 def get_log():
     return logging.getLogger('pp.auth.plugins.plain')
 
@@ -30,10 +31,10 @@ def register():
     Returns registration info for pp.auth
     """
     return {
-        'authenticators' : get_auth_from_config,
-        'mdproviders' : get_auth_from_config,
-        'groups' : get_groups_from_config,
-        'permissions' : get_permissions_from_config,
+        'authenticators': get_auth_from_config,
+        'mdproviders': get_auth_from_config,
+        'groups': get_groups_from_config,
+        'permissions': get_permissions_from_config,
     }
 
 
@@ -56,19 +57,19 @@ class PlainAuthenticatorMetadataProvider(object):
     authentication and to decorate the environment with the firstname
     and lastname fields for the matching username. The extra field
     name is created as a convience for '%s %s' % (firstname, lastname)
-    
+
     """
     FIELDNAMES = ['username', 'password', 'firstname', 'lastname', 'email']
-    
+
     def __init__(self, user_details):
         """Load the user details recovered from a file.
 
         :param user_details: This is a string of lines read from
             the user data CSV file.
-            
+
         """
         self.userDetails = {}
-        
+
         s = StringIO.StringIO(user_details)
         reader = csv.DictReader(s, fieldnames=self.FIELDNAMES)
         for row in reader:
@@ -80,7 +81,7 @@ class PlainAuthenticatorMetadataProvider(object):
             lastname = row['lastname'].strip()
             email = row['email'].strip()
             name = "%s %s" % (firstname, lastname)
-            
+
             self.userDetails[username] = dict(
                 username=username,
                 password=password,
@@ -99,14 +100,14 @@ class PlainAuthenticatorMetadataProvider(object):
             http://docs.repoze.org/who/narr.html#writing-an-authenticator-plugin
 
         :returns: None indicated auth failure.
-            
+
         """
         get_log().info("authenticate: %r" % identity)
         returned = None
-        
+
         login = identity['login']
         password = identity['password']
-                    
+
         # Recover the password and check the given one against it:
         user = self.userDetails.get(login)
         get_log().info("authenticate: found user: %r" % user)
@@ -129,7 +130,7 @@ class PlainAuthenticatorMetadataProvider(object):
 
         See: (IMetadataProvider)
             http://docs.repoze.org/who/narr.html#writing-a-metadata-provider-plugin
-        
+
         """
         userid = identity.get('repoze.who.userid')
         info = self.userDetails.get(userid)
@@ -147,7 +148,7 @@ def get_auth_from_config(settings, prefix="pp.auth.plain."):
 
     # Recover the User details and load it for the CSV repoze plugin to handle:
     with open(os.path.abspath(password_file), 'r') as fp:
-       return (PlainAuthenticatorMetadataProvider(fp.read()))
+        return (PlainAuthenticatorMetadataProvider(fp.read()))
 
 
 def get_groups_from_config(settings, prefix="pp.auth.plain."):

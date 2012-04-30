@@ -3,22 +3,13 @@
 pp.auth database model: User
 
 """
-import pprint
 import logging
-import sys
 
 import sqlalchemy
 from sqlalchemy import Column
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import backref
-from sqlalchemy.orm import relation
-from sqlalchemy.types import String
-from sqlalchemy.types import Integer
-from sqlalchemy.ext.declarative import declarative_base
 
 from pp.common.db import guid
 from pp.common.db import Base
-from pp.common.db import session
 from pp.auth import pwtools
 
 
@@ -37,7 +28,6 @@ class UserTable(Base):
     display_name = Column(sqlalchemy.types.String(), nullable=True, index=True)
     email = Column(sqlalchemy.types.String(), nullable=True, index=False)
     phone = Column(sqlalchemy.types.String(), nullable=True, index=False)
-
 
     def __init__(self, username, password=None, password_hash=None, display_name='', email='', phone=''):
         """Create a User instance in the database.
@@ -77,6 +67,29 @@ class UserTable(Base):
         self.email = email
         self.phone = phone
 
+    def to_dict(self):
+        """Convert into a transportable dict.
+
+        :returns: a dict which could be json encoded.
+
+        E.g::
+
+            returned = dict(
+                id=self.id,
+                username=self.username,
+                display_name=self.display_name,
+                email=self.email,
+                phone=self.phone,
+            )
+
+        """
+        return dict(
+            id=self.id,
+            username=self.username,
+            display_name=self.display_name,
+            email=self.email,
+            phone=self.phone,
+        )
 
     def validate_password(self, plain_text):
         """Called to validate the given password.
@@ -93,10 +106,8 @@ class UserTable(Base):
         """
         return pwtools.validate_password(plain_text, self.password_hash)
 
-
     def __repr__(self):
         return "'UserTable <%s>: %s'" % (self.id, self.username)
-
 
 
 def init():
@@ -115,8 +126,22 @@ def create():
     """Called to do the table schema creation.
     """
     get_log().info("create: begin.")
+
+    from pp.common.db import session
+
+    user_dict = dict(
+        username="admin",
+        display_name=u'Andrés Plácido Bolívar',
+        email=u'andrés.bolívar@example.com',
+        phone="123",
+        password="password",
+    )
+
+    s = session()
+    admin_user = s.add(UserTable(**user_dict))
+
     # Call any custom creating hooks here
-    get_log().info("create: done.")
+    get_log().info("create: Initial admin user <%s> created OK." % admin_user)
 
 
 def destroy():
@@ -151,8 +176,3 @@ def load(fieldnames, data):
 
     """
     # TODO FinishMe
-
-
-
-
-

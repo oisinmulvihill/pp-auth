@@ -15,15 +15,16 @@ def get_log():
 
 PLUGIN_TYPES = ('authenticators', 'mdproviders', 'groups', 'permissions')
 
+
 def get_plugin_registry(settings, prefix="pp.auth."):
     """
     Get a registry of all the things that the configured plugins provide, mapping
-    the plugin type to a method tha builds the plugin from the settings dict. 
+    the plugin type to a method tha builds the plugin from the settings dict.
     The default response using the 'plain' plugin is this::
 
         plugin_registry = {
             'authenticators' : {
-                'plain' : plain.get_auth_from_config,   
+                'plain' : plain.get_auth_from_config,
             },
             'mdproviders' : {
                 'plain' : plain.get_auth_from_config,
@@ -42,7 +43,7 @@ def get_plugin_registry(settings, prefix="pp.auth."):
     plugin_mods = settings.get('%splugins' % prefix, 'pp.auth.plugins.plain').split(',')
 
     for mod in [importlib.import_module(i.strip()) for i in plugin_mods]:
-        # Use the last part of the plugin's module name as its ID. 
+        # Use the last part of the plugin's module name as its ID.
         plugin_id = mod.__name__.split('.')[-1]
         get_log().info("get_plugin_registry: found plugin %r: %r" % (plugin_id, mod))
         provides = mod.register()
@@ -68,7 +69,7 @@ def build_plugins(settings, plugin_registry, prefix="pp.auth."):
 
 
 def add_auth_from_config(app, settings, prefix="pp.auth."):
-    """ 
+    """
     Call add_auth, using settings gathered from a settings dictionary
     :param app: The WSGI application.
     :param settings: Settings dict
@@ -76,7 +77,7 @@ def add_auth_from_config(app, settings, prefix="pp.auth."):
 
     Example settings file::
 
-        # Repoze plugin config 
+        # Repoze plugin config
         repoze.who.authenticators = plain
         repoze.who.mdproviders = plain
         repoze.who.groups = plain
@@ -95,7 +96,7 @@ def add_auth_from_config(app, settings, prefix="pp.auth."):
 
     """
     # Mandatory settings
-    site_name = settings.get('%ssite_name' % prefix,'')
+    site_name = settings.get('%ssite_name' % prefix, '')
     cookie_name = settings['%scookie_name' % prefix]
     cookie_secret = settings['%scookie_secret' % prefix]
     login_url = settings.get('%slogin_url' % prefix, '/login')
@@ -106,11 +107,12 @@ def add_auth_from_config(app, settings, prefix="pp.auth."):
 
     # These are all the built plugins that we'e been configured to use
     plugins = build_plugins(settings, plugin_registry, prefix)
-    
+
     return add_auth(app, site_name, cookie_name, cookie_secret,  login_url, login_handler_url,
                     **plugins)
 
-def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handler_url, 
+
+def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handler_url,
              authenticators, mdproviders, groups, permissions):
     """
     Add authentication and authorization middleware to the ``app``.
@@ -127,7 +129,7 @@ def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handle
     :param permissions: list of permissions plugins
     :return: The same WSGI application, with authentication and
         authorization middleware.
-        
+
     """
 
     get_log().info("add_auth: intialising Repoze")
@@ -141,7 +143,7 @@ def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handle
     if not permissions:
         raise ValueError("No permissions provided")
 
-    # If we ever change default behavior for challengers and identifiers, move these 
+    # If we ever change default behavior for challengers and identifiers, move these
     # to the above function
     logout_handler = None
     form = RedirectingFormPlugin(
@@ -159,7 +161,7 @@ def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handle
 
     #challengers = [('form', form), ('basicauth', basicauth)]
     #challengers = [('basicauth', basicauth)]
-    challengers = [('form', form)] 
+    challengers = [('form', form)]
 
     #get_log().info(dict(groups))
     #get_log().info(    dict(permissions))
@@ -168,16 +170,16 @@ def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handle
     #get_log().info(    challengers )
     #get_log().info(    mdproviders)
     app_with_auth = setup_auth(
-        app = app,
-        group_adapters = dict(groups),  # why these are dicts where all the other are lists... 
-        permission_adapters = dict(permissions), 
-        identifiers = identifiers, 
-        authenticators = authenticators,
-        challengers = challengers, 
-        mdproviders = mdproviders, 
-        log_level = logging.DEBUG
+        app=app,
+        group_adapters=dict(groups),  # why these are dicts where all the other are lists...
+        permission_adapters=dict(permissions),
+        identifiers=identifiers,
+        authenticators=authenticators,
+        challengers=challengers,
+        mdproviders=mdproviders,
+        log_level=logging.DEBUG
     )
 
     get_log().info("add_auth: user/group/permission setup OK.")
-        
+
     return app_with_auth

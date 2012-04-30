@@ -33,13 +33,11 @@ class UserTC(unittest.TestCase):
         # ok.
         self.session = session()
 
-
     def tearDown(self):
         """I don't really bother cleaning up after a test as it useful to aid test debugging,
         if you use a real database and need to check state after a single test run.
         """
         self.session.close()
-
 
     def test_unicode_fields(self):
         """Test the entry of unicode username, email, display name.
@@ -72,14 +70,13 @@ class UserTC(unittest.TestCase):
                 # hash should in theory work.
                 continue
 
-            items = user.find(**{field:user_dict[field]})
-            self.assertEquals(items, [item1,])
+            items = user.find(**{field: user_dict[field]})
+            self.assertEquals(items, [item1])
             item1 = items[0]
             self.assertEquals(item1.username, user_dict['username'])
             self.assertEquals(item1.display_name, user_dict['display_name'])
             self.assertEquals(item1.email, user_dict['email'])
             self.assertEquals(item1.phone, user_dict['phone'])
-
 
     def testBasicCRUD(self):
         """Test the basic add and get method
@@ -124,7 +121,7 @@ class UserTC(unittest.TestCase):
         # Make sure I cannot add the same username again:
         self.assertRaises(user.UserPresentError, user.add, **user_dict)
 
-        self.assertEquals(user.find(username=username), [item1,])
+        self.assertEquals(user.find(username=username), [item1])
         self.assertEquals(user.has(username), True)
         self.assertEquals(user.count(), 1)
 
@@ -135,6 +132,13 @@ class UserTC(unittest.TestCase):
         self.assertEquals(item2.email, user_dict['email'])
         self.assertEquals(item2.phone, user_dict['phone'])
 
+        u = item2.to_dict()
+
+        self.assertEquals(u['username'], user_dict['username'])
+        self.assertEquals(u['display_name'], user_dict['display_name'])
+        self.assertEquals(u['email'], user_dict['email'])
+        self.assertEquals(u['phone'], user_dict['phone'])
+
         user.remove(item2.id)    # remove just by id
 
         self.assertEquals(user.count(), 0)
@@ -142,7 +146,3 @@ class UserTC(unittest.TestCase):
         self.assertEquals(user.has(item2.id), False)
 
         self.assertRaises(utils.DBRemoveError, user.remove, item2.id)
-
-
-
-

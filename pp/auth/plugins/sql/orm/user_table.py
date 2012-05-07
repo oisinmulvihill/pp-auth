@@ -14,7 +14,7 @@ from pp.auth import pwtools
 
 
 def get_log():
-    return logging.getLogger('pp.auth.orm.user_table')
+    return logging.getLogger('pp.auth.plugins.sql.orm.user_table')
 
 
 class UserTable(Base):

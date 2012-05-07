@@ -27,13 +27,13 @@ from sqlalchemy.sql import select
 from pp.common.db import session
 from pp.common.db.utils import generic_has, generic_get, generic_find, generic_update, generic_add, generic_remove
 
-from pp.auth.orm.user_table import UserTable
+from orm.user_table import UserTable
 
 
 def get_log(fn=''):
     if fn:
         fn = ".%s" % fn
-    return logging.getLogger('pp.auth.user%s' % fn)
+    return logging.getLogger('pp.auth.plugins.sql.user%s' % fn)
 
 
 # Username is unique and the common method of account recovery:

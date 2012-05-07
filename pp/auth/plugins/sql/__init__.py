@@ -11,16 +11,23 @@ plain.get_permissions_from_config().
 """
 import logging
 
-from pp.auth import user
+from pp.auth.plugins import plain
 
-import plain
-
+import user
 
 def get_log(extra=None):
-    m = 'pp.auth.plugins.plain'
+    m = 'pp.auth.plugins.user'
     if extra:
         m = "%s.%s" % (m, extra)
     return logging.getLogger(m)
+
+
+def commondb_setup():
+    """
+    Returns all the commondb modules and mappers this package provides
+    """
+    import orm.user_table
+    return {'modules': [orm.user_table], 'mappers': []}
 
 
 def register():

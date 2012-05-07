@@ -8,8 +8,8 @@ import unittest
 from pp.common.db import session, dbsetup
 from pp.common.db import utils
 
-from pp.auth import user
 from pp.auth import pwtools
+from pp.auth.plugins.sql import user
 
 
 class UserTC(unittest.TestCase):

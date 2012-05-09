@@ -15,6 +15,7 @@ from pp.auth.plugins import plain
 
 import user
 
+
 def get_log(extra=None):
     m = 'pp.auth.plugins.user'
     if extra:

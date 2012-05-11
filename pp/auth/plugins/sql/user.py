@@ -30,10 +30,12 @@ from pp.common.db.utils import generic_has, generic_get, generic_find, generic_u
 from orm.user_table import UserTable
 
 
-def get_log(fn=''):
-    if fn:
-        fn = ".%s" % fn
-    return logging.getLogger('pp.auth.plugins.sql.user%s' % fn)
+def get_log(extra=None):
+    m = "pp.auth.plugins.sql.user"
+    if extra:
+        if isinstance(extra, basestring):
+            m = "%s.%s" % (m, extra)
+    return logging.getLogger(m)
 
 
 # Username is unique and the common method of account recovery:

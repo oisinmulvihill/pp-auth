@@ -41,6 +41,32 @@ def hash_password(plaintext_password):
     return hashed_password
 
 
+def validate_password_hash(pass_hash_one, pass_hash_two):
+    """Checks that the first password hash equals the second.
+
+    :returns: True, password ok i.e. one == two (after salt removed).
+
+    """
+    if isinstance(pass_hash_one, unicode):
+        password_one_8bit = pass_hash_one.encode('UTF-8')
+    else:
+        password_one_8bit = pass_hash_one
+
+    if isinstance(pass_hash_two, unicode):
+        password_two_8bit = pass_hash_two.encode('UTF-8')
+    else:
+        password_two_8bit = pass_hash_two
+
+    #print "validate_password_hash: password_8bit: ", password_one_8bit, password_two_8bit
+
+    one = password_one_8bit[SHA1_SALT_LENGTH:]
+    two = password_two_8bit[SHA1_SALT_LENGTH:]
+
+    #print "Hashes minus salt Equal? %s" % (one == two)
+
+    return (one == two)
+
+
 def validate_password(plaintext_password, password_hash):
     """Check the password against existing credentials.
 

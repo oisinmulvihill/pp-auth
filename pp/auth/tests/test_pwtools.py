@@ -48,7 +48,7 @@ def test_hash_then_unhash_fail_unicode_other():
 def test_verify_hash():
     plain_password = u"manÃna123"
     hashed_pw = pwtools.hash_password(plain_password)
-    assert pwtools.validate_password_hash(hashed_pw, hashed_pw)
+    assert pwtools.validate_password_hash(hashed_pw, pwtools.hash_password(plain_password))
 
     plain_password = u"manÃna123"
     hashed_pw = pwtools.hash_password(plain_password)

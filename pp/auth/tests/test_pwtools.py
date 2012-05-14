@@ -45,13 +45,13 @@ def test_hash_then_unhash_fail_unicode_other():
     assert not pwtools.validate_password("not the password", hashed_pw)
 
 
-def test_verify_hash():
-    plain_password = u"manÃna123"
-    hashed_pw = pwtools.hash_password(plain_password)
-    assert pwtools.validate_password_hash(hashed_pw, pwtools.hash_password(plain_password))
+#def test_verify_hash():
+#    plain_password = u"manÃna123"
+#    hashed_pw = pwtools.hash_password(plain_password)
+#    assert pwtools.validate_password_hash(hashed_pw, pwtools.hash_password(plain_password))
 
-    plain_password = u"manÃna123"
-    hashed_pw = pwtools.hash_password(plain_password)
-    assert not pwtools.validate_password_hash(
-        pwtools.hash_password("should not validate"), hashed_pw
-    )
+#    plain_password = u"manÃna123"
+#    hashed_pw = pwtools.hash_password(plain_password)
+#    assert not pwtools.validate_password_hash(
+#        pwtools.hash_password("should not validate"), hashed_pw
+#    )

@@ -3,6 +3,7 @@ dist
 .coverage
 syntax: glob
 *.log
+*.swp
 *~
 *.egg-info*
 *.pyc

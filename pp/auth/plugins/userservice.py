@@ -60,8 +60,9 @@ class UserServiceAuthenticatorMetadataProvider(object):
         login = identity['login']
         password = identity['password']
 
-        get_log().info("authenticate:  attempting to authenticate <%s>" % user)
-        return self.us.authenticate(login, password)
+        get_log().info("authenticate:  attempting to authenticate <%s>" % login)
+        if self.us.user.authenticate(login, password):
+            return login
 
     def add_metadata(self, environ, identity):
         """

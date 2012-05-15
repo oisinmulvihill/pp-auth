@@ -54,8 +54,8 @@ class UserServiceAuthenticatorMetadataProvider(object):
         :returns: None indicated auth failure.
 
         """
-        get_log().info("authenticate: %r" % identity)
         login = identity['login']
+        get_log().info("authenticate: %r" % login)
         password = identity['password']
         try:
             get_log().info("authenticate:  attempting to authenticate <%s>" % login)

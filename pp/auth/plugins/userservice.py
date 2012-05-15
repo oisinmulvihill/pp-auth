@@ -55,6 +55,10 @@ class UserServiceAuthenticatorMetadataProvider(object):
 
         """
         login = identity['login']
+        if not login:
+            get_log().info("No login name given <%s>" % login)
+            return
+
         get_log().info("authenticate: %r" % login)
         password = identity['password']
         try:
@@ -77,6 +81,9 @@ class UserServiceAuthenticatorMetadataProvider(object):
 
         """
         userid = identity.get('repoze.who.userid')
+        if not userid:
+            get_log().info("No userid to get details for <%s>" % userid)
+
         try:
             result = self.us.user.get(userid)
 

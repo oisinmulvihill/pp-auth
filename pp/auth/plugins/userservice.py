@@ -57,9 +57,15 @@ class UserServiceAuthenticatorMetadataProvider(object):
         get_log().info("authenticate: %r" % identity)
         login = identity['login']
         password = identity['password']
+        try:
+            get_log().info("authenticate:  attempting to authenticate <%s>" % login)
+            self.us.user.authenticate(login, password)
 
-        get_log().info("authenticate:  attempting to authenticate <%s>" % login)
-        if self.us.user.authenticate(login, password):
+        except:
+            get_log().exception("Authenticate comms error for <%s>: " % login)
+
+        else:
+            get_log().info("authenticate: <%s> authenticated OK." % login)
             return login
 
     def add_metadata(self, environ, identity):

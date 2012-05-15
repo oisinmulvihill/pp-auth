@@ -81,8 +81,11 @@ class UserServiceAuthenticatorMetadataProvider(object):
 
         """
         userid = identity.get('repoze.who.userid')
+        get_log().debug("add_metadata for userid <%s>" % userid)
+
         if not userid:
             get_log().info("No userid to get details for <%s>" % userid)
+	    return
 
         try:
             result = self.us.user.get(userid)

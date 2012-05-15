@@ -87,6 +87,7 @@ class UserTable(Base):
             id=self.id,
             username=self.username,
             display_name=self.display_name,
+            password_hash=self.password_hash,
             email=self.email,
             phone=self.phone,
         )

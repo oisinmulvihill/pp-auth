@@ -21,9 +21,10 @@ agility of the code. Don't do it or I'll find you...
 import logging
 
 # TODO add more imports
-from sqlalchemy import or_
-from sqlalchemy.sql import select
+#from sqlalchemy import or_
+#from sqlalchemy.sql import select
 
+from pp.auth import pwtools
 from pp.common.db import session
 from pp.common.db.utils import generic_has, generic_get, generic_find, generic_update, generic_add, generic_remove
 
@@ -44,7 +45,7 @@ get = generic_get(UserTable, 'username')
 
 find = generic_find(UserTable)
 
-update = generic_update(UserTable)
+g_update = generic_update(UserTable)
 
 remove = generic_remove(UserTable)
 
@@ -81,28 +82,40 @@ def add(**user):
     return g_add(**user)
 
 
+def update(**user):
+    """Called to update the details of an exiting user on the system.
+
+    This handles the 'new_password' field before passing on to the
+    generic update.
+
+    Only password can be changed at the moment.
+
+    """
+    log = get_log('update')
+
+    log.debug("Given user <%s> to update." % user)
+
+    update_data = {}
+    current = get(user['username'])
+
+    if "new_password" in user:
+        new_password = user['new_password']
+        user.pop('new_password')
+        # Set the new password hash to store, replacing the current one:
+        update_data['password'] = pwtools.hash_password(new_password)
+
+    # commits handled elsewhere:
+    update_data['no_commit'] = True
+
+    g_update(current, **update_data)
+    log.debug("<%s> updated OK." % user['username'])
+
+    # Return the updated user details:
+    return get(user['username'])
+
+
 def count():
     """Return the number of users on the system."""
     s = session()
     query = s.query(UserTable)
     return query.count()
-
-
-# to remove
-#
-# def transform(attr_name, transformer):
-#     """
-#     Example method showing commits
-#     """
-#     s = session()
-#     query = s.query(UserTable)
-#     for item in query.all():
-#         # Recover an attribute
-#         attr = getattr(item, attr_name)
-
-#         # Transform it and set it back on the object
-#         setattr(item, attr_name, transformer(attr))
-
-#     # Commit the changes
-#     query.commit()
-

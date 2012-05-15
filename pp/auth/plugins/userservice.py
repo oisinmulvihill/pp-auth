@@ -37,8 +37,8 @@ class UserServiceAuthenticatorMetadataProvider(object):
     """
 
     def __init__(self, user_service_uri):
-        """Set up the UserService REST client library with the location 
-        to communicate with. 
+        """Set up the UserService REST client library with the location
+        to communicate with.
         """
         self.log = get_log("UserServiceAuthenticatorMetadataProvider")
         self.us = rest.UserService(user_service_uri)
@@ -55,8 +55,6 @@ class UserServiceAuthenticatorMetadataProvider(object):
 
         """
         get_log().info("authenticate: %r" % identity)
-        returned = None
-
         login = identity['login']
         password = identity['password']
 
@@ -73,12 +71,16 @@ class UserServiceAuthenticatorMetadataProvider(object):
 
         """
         userid = identity.get('repoze.who.userid')
-        #info = self.userDetails.get(userid)
-        # need to recover the details via the api, it doesn't have
-        # a get user at the moment. 
-        info = {"display_name": "??", "email": "??"}
-        if info is not None:
-            identity.update(info)
+        try:
+            result = self.us.user.get(userid)
+
+        except:
+            get_log().exception("user recovery failured for <%s>: " % userid)
+
+        else:
+            get_log().debug("user metadata recovered: <%s>" % result)
+            if result:
+                identity.update(result)
 
 
 def get_auth_from_config(settings, prefix="pp.auth.userservice."):

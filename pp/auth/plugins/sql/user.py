@@ -26,7 +26,8 @@ import logging
 
 from pp.auth import pwtools
 from pp.common.db import session
-from pp.common.db.utils import generic_has, generic_get, generic_find, generic_update, generic_add, generic_remove
+from pp.common.db.utils import generic_has, generic_get, generic_find
+from pp.common.db.utils import generic_update, generic_add, generic_remove
 
 from orm.user_table import UserTable
 
@@ -75,9 +76,11 @@ def add(**user):
     username = user['username']
 
     if has(username):
-        raise UserPresentError("The username <%s> is present and cannot be added again." % username)
+        raise UserPresentError(
+            "The username <%s> is present and cannot be added." % username
+        )
 
-    log.debug("The username <%s> is not present already. OK to add." % username)
+    log.debug("The username <%s> is not present. OK to add." % username)
 
     return g_add(**user)
 
@@ -102,7 +105,15 @@ def update(**user):
         new_password = user['new_password']
         user.pop('new_password')
         # Set the new password hash to store, replacing the current one:
-        update_data['password'] = pwtools.hash_password(new_password)
+
+        new_password = pwtools.hash_password(new_password)
+
+        log.debug("new_password <%s> old password <%s>" % (
+            new_password,
+            current.password_hash
+        ))
+
+        update_data['password_hash'] = new_password
 
     # commits handled elsewhere:
     update_data['no_commit'] = True

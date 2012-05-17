@@ -3,27 +3,22 @@
 Setuptools script for pp-auth (pp.auth)
 
 """
+from setuptools import setup, find_packages
 
-try:
-    from setuptools import setup, find_packages
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-    from setuptools import setup, find_packages
-
-Name='pp-auth'
-ProjectUrl=""
-Version="1.0.dev1"
-Author=''
-AuthorEmail='everyone at pythonpro dot co dot uk'
-Maintainer=''
-Summary=' pp-auth '
-License=''
-Description=Summary
-ShortDescription=Summary
+Name = 'pp-auth'
+ProjectUrl = ""
+Version = "1.0.2dev"
+Author = ''
+AuthorEmail = 'everyone at pythonpro dot co dot uk'
+Maintainer = ''
+Summary = ' pp-auth '
+License = ''
+Description = Summary
+ShortDescription = Summary
 
 needed = [
     "mock",
+    'passlib',
     "pp-common-db",
     "repoze.who==1.0.19",
     "repoze.what==1.0.9",

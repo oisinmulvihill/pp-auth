@@ -105,15 +105,29 @@ def update(**user):
         new_password = user['new_password']
         user.pop('new_password')
         # Set the new password hash to store, replacing the current one:
-
         new_password = pwtools.hash_password(new_password)
-
-        log.debug("new_password <%s> old password <%s>" % (
-            new_password,
-            current.password_hash
-        ))
-
         update_data['password_hash'] = new_password
+
+    if "display_name" in user:
+        update_data['display_name'] = user['display_name']
+
+    if "new_username" in user:
+        new_username = user['new_username']
+        if not has(user['new_username']):
+            update_data['username'] = new_username
+        else:
+            raise UserPresentError(
+                "Cannot rename to username <%s> as it is used." % new_username
+            )
+
+    if "password_hash" in user:
+        update_data['password_hash'] = user['password_hash']
+
+    if "email" in user:
+        update_data['email'] = user['email']
+
+    if "phone" in user:
+        update_data['phone'] = user['phone']
 
     # commits handled elsewhere:
     update_data['no_commit'] = True

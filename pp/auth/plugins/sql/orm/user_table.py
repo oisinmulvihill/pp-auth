@@ -113,7 +113,10 @@ class UserTable(Base):
 
 def init():
     """Called to do the initial metadata set up.
-       Returns a list of the tables, mappers and declarative base classes this module implements
+
+    Returns a list of the tables, mappers and declarative base classes this
+    module implements.
+
     """
     get_log().info("init: begin.")
     declarative_bases = [UserTable]

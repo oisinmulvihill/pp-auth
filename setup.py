@@ -71,7 +71,7 @@ setup(
     include_package_data=True,
     packages=find_packages(),
     package_data=PackageData,
-    eager_resources = EagerResources,
-    entry_points = EntryPoints,
-    namespace_packages = ['pp'],
+    eager_resources=EagerResources,
+    entry_points=EntryPoints,
+    namespace_packages=['pp'],
 )

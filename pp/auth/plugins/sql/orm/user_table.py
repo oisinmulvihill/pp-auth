@@ -3,6 +3,7 @@
 pp.auth database model: User
 
 """
+import json
 import logging
 
 import sqlalchemy
@@ -29,7 +30,10 @@ class UserTable(Base):
     email = Column(sqlalchemy.types.String(), nullable=True, index=False)
     phone = Column(sqlalchemy.types.String(), nullable=True, index=False)
 
-    def __init__(self, username, password=None, password_hash=None, display_name='', email='', phone=''):
+    # This represent a dict
+    json_extra = Column(sqlalchemy.types.String(), nullable=True, default=json.dumps({}), index=False)
+
+    def __init__(self, username, password=None, password_hash=None, display_name='', email='', phone='', extra={}):
         """Create a User instance in the database.
 
         :param username: This is the user's unique name used to log into the system.
@@ -49,6 +53,8 @@ class UserTable(Base):
 
         :param phone: A phone number the user (empty by default).
 
+        :param extra: A python dict containing arbitrary, JSON encodable, data.
+
         """
         self.id = guid()
         self.username = username
@@ -67,6 +73,8 @@ class UserTable(Base):
         self.email = email
         self.phone = phone
 
+        self.extra = extra
+
     def to_dict(self):
         """Convert into a transportable dict.
 
@@ -83,6 +91,7 @@ class UserTable(Base):
             )
 
         """
+
         return dict(
             id=self.id,
             username=self.username,
@@ -90,7 +99,39 @@ class UserTable(Base):
             password_hash=self.password_hash,
             email=self.email,
             phone=self.phone,
+            extra=self.extra,
         )
+
+    def _extra():
+        doc = "Wrapper around user extra data stored as JSON string."
+
+        def fget(self):
+            """Get the current contents or return and empty dict."""
+            if isinstance(self.json_extra, basestring):
+                if isinstance(self.json_extra, unicode):
+                    extra = self.json_extra.encode("utf-8")
+                else:
+                    extra = self.json_extra
+                extra = json.loads(extra)
+            if not extra:
+                extra = {}
+            #print "fget: <%s>" % extra
+            return extra
+
+        def fset(self, value):
+            """Set the new dict only if a dict is given."""
+            #print "fset: <%s:%s>" % (type(value), value)
+            if isinstance(value, dict):
+                self.json_extra = json.dumps(value)
+
+        def fdel(self):
+            """Reset back to empty state, wiping all stored content."""
+            self.json_extra = json.dumps({})
+            print "fdel: reset to <%s>" % (type(self.json_extra), self.json_extra)
+
+        return locals()
+
+    extra = property(**_extra())
 
     def validate_password(self, plain_text):
         """Called to validate the given password.

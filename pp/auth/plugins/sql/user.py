@@ -129,8 +129,18 @@ def update(**user):
     if "phone" in user:
         update_data['phone'] = user['phone']
 
+    if "extra" in user:
+        # I need to use the special extra property to correct handle conversion
+        # to valid JSON that can be stored. Then set the raw field that the
+        # low level update will set.
+        current.extra = user['extra']
+        # should be valid "{}" or "{..data..}" at this point:
+        update_data['json_extra'] = current.json_extra
+
     # commits handled elsewhere:
     update_data['no_commit'] = True
+
+    #print "\n\nupdate_data:\n%s\n\n" % update_data
 
     g_update(current, **update_data)
     log.debug("<%s> updated OK." % user['username'])

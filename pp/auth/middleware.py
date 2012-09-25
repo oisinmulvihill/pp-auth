@@ -49,14 +49,17 @@ def get_plugin_registry(settings, prefix="pp.auth."):
     #print "plugin_mods: ", plugin_mods
     lines = plugin_mods.split('\n')
 
-    # ignore top level 'pp.auth.plugins':
-    plugin_mods = [p for p in lines if p and p != "pp.auth.plugins"]
+    def check(x):
+        rc = False
+        x = x.strip()
+        # ignore top level 'pp.auth.plugins' which is present when no
+        # plugins are. Debug why later...
+        if x and x != "pp.auth.plugins":
+            rc = True
+        return rc
 
+    plugin_mods = [p for p in lines if check(p)]
     log.debug("plugin_mods (newline separated): <%s>" % plugin_mods)
-
-    if not plugin_mods:
-        log.info("no plugins configurated")
-        return None
 
     for mod in [importlib.import_module(i.strip()) for i in plugin_mods]:
         # Use the last part of the plugin's module name as its ID.
@@ -75,15 +78,16 @@ def build_plugins(settings, plugin_registry, prefix="pp.auth."):
     """
     Builds all the plugins we've been asked to configure in the settings
     """
+    ids = []
     log = get_log("build_plugins")
 
     res = defaultdict(list)
-    if not res:
-        log.info("no plugins loaded to build.")
-        return None
 
     for plugin_type in PLUGIN_TYPES:
-        ids = [i.strip() for i in settings[prefix + plugin_type].split(',')]
+        plugid = "%s%s" % (prefix, plugin_type)
+        if plugid in settings:
+            ids = [i.strip() for i in settings[plugid].split(',')]
+
         for plugin_id in ids:
             if not plugin_id in plugin_registry[plugin_type]:
                 raise ValueError("Unknown %s: %r" % (plugin_type, plugin_id))

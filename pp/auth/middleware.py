@@ -9,17 +9,20 @@ from repoze.who.plugins.auth_tkt import AuthTktCookiePlugin
 #from repoze.who.plugins.friendlyform import FriendlyFormPlugin
 
 
-def get_log():
-    return logging.getLogger('pp.auth.middleware')
+def get_log(extra=None):
+    return logging.getLogger(
+        "{}.{}".format(__name__, extra) if extra else __name__
+    )
 
 
 PLUGIN_TYPES = ('authenticators', 'mdproviders', 'groups', 'permissions')
 
 
 def get_plugin_registry(settings, prefix="pp.auth."):
-    """
-    Get a registry of all the things that the configured plugins provide, mapping
-    the plugin type to a method tha builds the plugin from the settings dict.
+    """Get a registry of all the things that the configured plugins provide,
+    mapping the plugin type to a method tha builds the plugin from the
+    settings dict.
+
     The default response using the 'plain' plugin is this::
 
         plugin_registry = {
@@ -37,18 +40,34 @@ def get_plugin_registry(settings, prefix="pp.auth."):
             },
         }
     """
+    log = get_log("get_plugin_registry")
+
     res = dict(list((i, {}) for i in PLUGIN_TYPES))
 
-    # Find plugins we've been asked to configure
-    plugin_mods = settings.get('%splugins' % prefix, 'pp.auth.plugins.plain').split(',')
+    # Find plugins we've been asked to configure:
+    plugin_mods = settings.get('%splugins' % prefix, 'pp.auth.plugins')
+    #print "plugin_mods: ", plugin_mods
+    lines = plugin_mods.split('\n')
+
+    # ignore top level 'pp.auth.plugins':
+    plugin_mods = [p for p in lines if p and p != "pp.auth.plugins"]
+
+    log.debug("plugin_mods (newline separated): <%s>" % plugin_mods)
+
+    if not plugin_mods:
+        log.info("no plugins configurated")
+        return None
 
     for mod in [importlib.import_module(i.strip()) for i in plugin_mods]:
         # Use the last part of the plugin's module name as its ID.
         plugin_id = mod.__name__.split('.')[-1]
-        get_log().info("get_plugin_registry: found plugin %r: %r" % (plugin_id, mod))
+        log.info("found plugin %r: %r" % (
+            plugin_id, mod
+        ))
         provides = mod.register()
         for plugin_type in PLUGIN_TYPES:
             res[plugin_type].update({plugin_id: provides[plugin_type]})
+
     return res
 
 
@@ -56,15 +75,27 @@ def build_plugins(settings, plugin_registry, prefix="pp.auth."):
     """
     Builds all the plugins we've been asked to configure in the settings
     """
+    log = get_log("build_plugins")
+
     res = defaultdict(list)
+    if not res:
+        log.info("no plugins loaded to build.")
+        return None
+
     for plugin_type in PLUGIN_TYPES:
         ids = [i.strip() for i in settings[prefix + plugin_type].split(',')]
         for plugin_id in ids:
             if not plugin_id in plugin_registry[plugin_type]:
                 raise ValueError("Unknown %s: %r" % (plugin_type, plugin_id))
 
-            get_log().info("add_auth_from_config: loading %s plugin: %s" % (plugin_type, plugin_id))
-            res[plugin_type].append((plugin_id, plugin_registry[plugin_type][plugin_id](settings)))
+            log.info("add_auth_from_config: loading %s plugin: %s" % (
+                plugin_type, plugin_id
+            ))
+
+            res[plugin_type].append((
+                plugin_id, plugin_registry[plugin_type][plugin_id](settings)
+            ))
+
     return res
 
 
@@ -95,25 +126,46 @@ def add_auth_from_config(app, settings, prefix="pp.auth."):
         pp.auth.login_handler_url = /login_handler
 
     """
+    log = get_log("add_auth_from_config")
+
+    returned = None
+
     # Mandatory settings
     site_name = settings.get('%ssite_name' % prefix, '')
     cookie_name = settings['%scookie_name' % prefix]
     cookie_secret = settings['%scookie_secret' % prefix]
     login_url = settings.get('%slogin_url' % prefix, '/login')
-    login_handler_url = settings.get('%slogin_handler_url' % prefix, '/login_handler')
+    login_handler_url = settings.get(
+        '%slogin_handler_url' % prefix, '/login_handler'
+    )
 
     # This is a registry of all the things that the configured plugins provide
     plugin_registry = get_plugin_registry(settings, prefix)
 
     # These are all the built plugins that we'e been configured to use
     plugins = build_plugins(settings, plugin_registry, prefix)
+    if plugins:
+        returned = add_auth(
+            app,
+            site_name,
+            cookie_name,
+            cookie_secret,
+            login_url,
+            login_handler_url,
+            **plugins
+        )
 
-    return add_auth(app, site_name, cookie_name, cookie_secret,  login_url, login_handler_url,
-                    **plugins)
+    else:
+        # No auth configured, return app unchanged:
+        log.warn("No auth configuration was found! Returning app unmodified.")
+        returned = app
+
+    return returned
 
 
-def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handler_url,
-             authenticators, mdproviders, groups, permissions):
+def add_auth(app, site_name, cookie_name, cookie_secret, login_url,
+             login_handler_url, authenticators, mdproviders, groups,
+             permissions):
     """
     Add authentication and authorization middleware to the ``app``.
 
@@ -143,8 +195,8 @@ def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handle
     if not permissions:
         raise ValueError("No permissions provided")
 
-    # If we ever change default behavior for challengers and identifiers, move these
-    # to the above function
+    # If we ever change default behavior for challengers and identifiers,
+    # move these to the above function
     logout_handler = None
     form = RedirectingFormPlugin(
         login_url,
@@ -155,7 +207,8 @@ def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handle
 
     cookie = AuthTktCookiePlugin(cookie_secret, cookie_name)
 
-    #identifiers = [('main_identifier', form), ('basicauth', basicauth), ('cookie', cookie)]
+    #identifiers = [('main_identifier', form), ('basicauth', basicauth),\
+    #   ('cookie', cookie)]
     #identifiers = [('basicauth', basicauth), ('cookie', cookie)]
     identifiers = [('form', form), ('cookie', cookie)]
 
@@ -171,7 +224,8 @@ def add_auth(app, site_name, cookie_name, cookie_secret, login_url, login_handle
     #get_log().info(    mdproviders)
     app_with_auth = setup_auth(
         app=app,
-        group_adapters=dict(groups),  # why these are dicts where all the other are lists...
+        # # why these are dicts where all the other are lists...
+        group_adapters=dict(groups),
         permission_adapters=dict(permissions),
         identifiers=identifiers,
         authenticators=authenticators,

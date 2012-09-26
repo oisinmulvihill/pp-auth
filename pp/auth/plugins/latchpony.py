@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 """
 import logging
@@ -8,9 +9,8 @@ from pp.latchpony.client import rest
 
 
 def get_log(extra=None):
-    return logging.getLogger(
-        "{}.{}".format(__name__, extra) if extra else __name__
-    )
+    m = "{}.{}".format(__name__, extra) if extra else __name__
+    return logging.getLogger(m)
 
 
 def register():

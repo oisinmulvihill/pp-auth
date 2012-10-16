@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 """
 import logging
@@ -8,9 +9,8 @@ from pp.latchpony.client import rest
 
 
 def get_log(extra=None):
-    return logging.getLogger(
-        "{}.{}".format(__name__, extra) if extra else __name__
-    )
+    m = "{}.{}".format(__name__, extra) if extra else __name__
+    return logging.getLogger(m)
 
 
 def register():
@@ -55,21 +55,21 @@ class LatchPonyAdapter(BaseSourceAdapter):
 
             try:
                 # Check the service is running:
-                self.lps.ping()
-
-            except ConnectionError:
-                self.log.exception(
-                    "Cannot connect to latchpony: '{}' ".format(self.uri)
+                #self.lps.ping()
+                self.log.debug(
+                    "latchpony: contacting '{:s}'.".format(self.uri)
                 )
-
-            else:
-                self.log.debug("latchpony: '{}' ping ok.".format(self.uri))
 
                 if self.__class__.__name__ == "LatchPonyGroupAdapter":
                     self._info = self.lps.groups_for(self.organisation)
 
                 elif self.__class__.__name__ == "LatchPonyPermissionsAdapter":
                     self._info = self.lps.perms_for(self.organisation)
+
+            except ConnectionError:
+                self.log.exception(
+                    "Cannot connect to latchpony: '{:s}' ".format(self.uri)
+                )
 
             return self._info
 

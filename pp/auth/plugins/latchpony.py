@@ -56,9 +56,9 @@ class LatchPonyAdapter(BaseSourceAdapter):
             try:
                 # Check the service is running:
                 #self.lps.ping()
-                self.log.debug(
-                    "latchpony: contacting '{:s}'.".format(self.uri)
-                )
+                # self.log.debug(
+                #     "latchpony: contacting '{:s}'.".format(self.uri)
+                # )
 
                 if self.__class__.__name__ == "LatchPonyGroupAdapter":
                     self._info = self.lps.groups_for(self.organisation)

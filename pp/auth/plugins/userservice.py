@@ -27,8 +27,8 @@ def register():
     return {
         'authenticators': get_auth_from_config,
         'mdproviders': get_auth_from_config,
-        'groups': get_groups_from_config,
-        'permissions': get_permissions_from_config,
+        'groups': None,
+        'permissions': None,
     }
 
 
@@ -105,26 +105,4 @@ def get_auth_from_config(settings, prefix="pp.auth.userservice."):
     """
     user_service_uri = settings['%suri' % prefix]
     return UserServiceAuthenticatorMetadataProvider(user_service_uri)
-
-
-def get_groups_from_config(settings, prefix="pp.auth.userservice."):
-    """
-    Return a groups `INIGroupAdapter` from a settings dict
-    """
-    groups_file = settings['%sgroups_file' % prefix]
-    if not os.path.isfile(groups_file):
-        raise ValueError("Unable to find groups file '%s'!" % groups_file)
-
-    return INIGroupAdapter(groups_file)
-
-
-def get_permissions_from_config(settings, prefix="pp.auth.userservice."):
-    """
-    Return a permissions `INIGroupAdapter` from a settings dict
-    """
-    permissions_file = settings['%spermissions_file' % prefix]
-    if not os.path.isfile(permissions_file):
-        raise ValueError("Unable to find permissions file '%s'!" % permissions_file)
-
-    return INIPermissionsAdapter(permissions_file)
 

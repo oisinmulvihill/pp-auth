@@ -41,8 +41,7 @@ def get_plugin_registry(settings, prefix="pp.auth."):
         }
     """
     log = get_log("get_plugin_registry")
-
-    res = dict(list((i, {}) for i in PLUGIN_TYPES))
+    res = {}
 
     # Find plugins we've been asked to configure:
     plugin_mods = settings.get('%splugins' % prefix, 'pp.auth.plugins')
@@ -69,7 +68,15 @@ def get_plugin_registry(settings, prefix="pp.auth."):
         ))
         provides = mod.register()
         for plugin_type in PLUGIN_TYPES:
-            res[plugin_type].update({plugin_id: provides[plugin_type]})
+            if provides[plugin_type]:
+                res[plugin_type] = {plugin_id: provides[plugin_type]}
+            else:
+                log.info(
+                    "not provided: '{}' by '{}'. Ignoring".format(
+                        plugin_type,
+                        mod.__name__,
+                    )
+                )
 
     return res
 
@@ -89,6 +96,10 @@ def build_plugins(settings, plugin_registry, prefix="pp.auth."):
             ids = [i.strip() for i in settings[plugid].split(',')]
 
         for plugin_id in ids:
+            if plugin_id not in plugin_registry:
+                # this is not provided. Ignore and skip to next.
+                continue
+
             if not plugin_id in plugin_registry[plugin_type]:
                 raise ValueError("Unknown %s: %r" % (plugin_type, plugin_id))
 

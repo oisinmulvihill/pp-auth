@@ -3,13 +3,12 @@
 """
 import os
 import logging
-import StringIO
 
+from repoze.what.adapters import BaseSourceAdapter
 from repoze.what.plugins.ini import INIGroupAdapter
-from repoze.what.plugins.ini import INIPermissionsAdapter
 
-from pp.auth import pwtools
 from pp.user.client import rest
+
 
 def get_log(extra=None):
     m = "pp.auth.plugins.userservice"
@@ -19,6 +18,14 @@ def get_log(extra=None):
     return logging.getLogger(m)
 
 
+class DummyINIAdapter(INIGroupAdapter):
+    def __init__(self):
+        BaseSourceAdapter.__init__(self)
+        self.info = {}
+
+    def _find_sections(self, hint):
+        return set()
+
 
 def register():
     """
@@ -27,8 +34,8 @@ def register():
     return {
         'authenticators': get_auth_from_config,
         'mdproviders': get_auth_from_config,
-        'groups': None,
-        'permissions': None,
+        'groups': get_groups_from_config,
+        'permissions': get_permissions_from_config
     }
 
 
@@ -106,3 +113,16 @@ def get_auth_from_config(settings, prefix="pp.auth.userservice."):
     user_service_uri = settings['%suri' % prefix]
     return UserServiceAuthenticatorMetadataProvider(user_service_uri)
 
+
+def get_groups_from_config(settings, prefix="pp.auth.userservice."):
+    """
+    Return a groups `INIGroupAdapter` from a settings dict
+    """
+    return DummyINIAdapter()
+
+
+def get_permissions_from_config(settings, prefix="pp.auth.userservice."):
+    """
+    Return a permissions `INIGroupAdapter` from a settings dict
+    """
+    return DummyINIAdapter()

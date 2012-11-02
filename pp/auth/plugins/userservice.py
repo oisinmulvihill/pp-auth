@@ -92,7 +92,7 @@ class UserServiceAuthenticatorMetadataProvider(object):
 
         if not userid:
             get_log().info("No userid to get details for <%s>" % userid)
-        return
+            return
 
         try:
             result = self.us.user.get(userid)

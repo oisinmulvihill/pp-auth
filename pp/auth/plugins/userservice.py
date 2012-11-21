@@ -1,7 +1,6 @@
 """
 
 """
-import os
 import logging
 
 from repoze.what.adapters import BaseSourceAdapter
@@ -11,10 +10,7 @@ from pp.user.client import rest
 
 
 def get_log(extra=None):
-    m = "pp.auth.plugins.userservice"
-    if extra:
-        if isinstance(extra, basestring):
-            m = "%s.%s" % (m, extra)
+    m = "{}.{}".format(__name__, extra) if extra else __name__
     return logging.getLogger(m)
 
 
@@ -56,7 +52,8 @@ class UserServiceAuthenticatorMetadataProvider(object):
         userid for the given details.
 
         See: (IAuthenticatorPlugin)
-            http://docs.repoze.org/who/narr.html#writing-an-authenticator-plugin
+            http://docs.repoze.org/who/narr.html\
+                #writing-an-authenticator-plugin
 
         :returns: None indicated auth failure.
 
@@ -69,7 +66,9 @@ class UserServiceAuthenticatorMetadataProvider(object):
         get_log().info("authenticate: %r" % login)
         password = identity['password']
         try:
-            get_log().info("authenticate:  attempting to authenticate <%s>" % login)
+            get_log().info(
+                "authenticate:  attempting to authenticate <%s>" % login
+            )
             self.us.user.authenticate(login, password)
 
         except:
@@ -84,7 +83,8 @@ class UserServiceAuthenticatorMetadataProvider(object):
         Recover the display name and other details for the given user name
 
         See: (IMetadataProvider)
-            http://docs.repoze.org/who/narr.html#writing-a-metadata-provider-plugin
+            http://docs.repoze.org/who/narr.html\
+                #writing-a-metadata-provider-plugin
 
         """
         userid = identity.get('repoze.who.userid')

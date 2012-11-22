@@ -36,7 +36,6 @@ EagerResources = [
 
 # Example including shell script out of scripts dir
 ProjectScripts = [
-#    'pp.auth/scripts/somescript',
 ]
 
 PackageData = {
@@ -45,9 +44,6 @@ PackageData = {
 
 # Example console script and paster template integration:
 EntryPoints = {
-    'console_scripts': [
-        #'authapp = pp.auth.scripts.main:main',
-    ],
 }
 
 
@@ -61,7 +57,7 @@ setup(
     description=ShortDescription,
     long_description=Description,
     classifiers=[
-      "Programming Language :: Python",
+        "Programming Language :: Python",
     ],
     license=License,
     scripts=ProjectScripts,

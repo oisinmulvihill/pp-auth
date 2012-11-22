@@ -60,7 +60,7 @@ class USMBMetadataProvider(object):
         """
         self.log = get_log("{}.USMBMetadataProvider".format(__name__))
 
-        from pp.surveyor.model import db
+        from pp.user.model import db
 
         cfg = dict(
             db_name=config.get("dbname", "pptestdb"),
@@ -82,7 +82,7 @@ class USMBMetadataProvider(object):
         :returns: None indicated auth failure.
 
         """
-        from pp.surveyor.model import user
+        from pp.user.model import user
 
         login = identity['login']
         if not login:
@@ -91,15 +91,15 @@ class USMBMetadataProvider(object):
             )
             return
 
-        get_log().info("authenticate: %r" % login)
+        #get_log().info("authenticate: %r" % login)
         password = identity['password']
         try:
-            get_log().info(
-                "authenticate:  attempting to authenticate <{!r}>".format(
-                    login
-                )
-            )
-            self.us.user.authenticate(login, password)
+            # get_log().info(
+            #     "authenticate:  attempting to authenticate <{!r}>".format(
+            #         login
+            #     )
+            # )
+            user.validate_password(login, password)
 
         except:
             get_log().exception(
@@ -121,8 +121,10 @@ class USMBMetadataProvider(object):
                 writing-a-metadata-provider-plugin
 
         """
+        from pp.user.model import user
+
         userid = identity.get('repoze.who.userid')
-        get_log().debug("add_metadata for userid <{!r}>".format(userid))
+        #get_log().debug("add_metadata for userid <{!r}>".format(userid))
 
         if not userid:
             get_log().info(
@@ -131,7 +133,7 @@ class USMBMetadataProvider(object):
             return
 
         try:
-            result = self.us.user.get(userid)
+            result = user.get(userid)
 
         except:
             get_log().exception(
@@ -139,7 +141,7 @@ class USMBMetadataProvider(object):
             )
 
         else:
-            get_log().debug("user metadata recovered: <{!r}>".format(result))
+            #get_log().debug("user metadata recovered: <{!r}>".format(result))
             if result:
                 identity.update(result)
 

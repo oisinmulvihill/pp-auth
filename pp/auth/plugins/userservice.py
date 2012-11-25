@@ -66,16 +66,16 @@ class UserServiceAuthenticatorMetadataProvider(object):
         get_log().info("authenticate: %r" % login)
         password = identity['password']
         try:
-            get_log().info(
-                "authenticate:  attempting to authenticate <%s>" % login
-            )
+            # get_log().info(
+            #     "authenticate:  attempting to authenticate <%s>" % login
+            # )
             self.us.user.authenticate(login, password)
 
         except:
             get_log().exception("Authenticate comms error for <%s>: " % login)
 
         else:
-            get_log().info("authenticate: <%s> authenticated OK." % login)
+            # get_log().info("authenticate: <%s> authenticated OK." % login)
             return login
 
     def add_metadata(self, environ, identity):
@@ -88,7 +88,7 @@ class UserServiceAuthenticatorMetadataProvider(object):
 
         """
         userid = identity.get('repoze.who.userid')
-        get_log().debug("add_metadata for userid <%s>" % userid)
+        # get_log().debug("add_metadata for userid <%s>" % userid)
 
         if not userid:
             get_log().info("No userid to get details for <%s>" % userid)
@@ -101,7 +101,7 @@ class UserServiceAuthenticatorMetadataProvider(object):
             get_log().exception("user recovery failured for <%s>: " % userid)
 
         else:
-            get_log().debug("user metadata recovered: <%s>" % result)
+            # get_log().debug("user metadata recovered: <%s>" % result)
             if result:
                 identity.update(result)
 

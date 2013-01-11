@@ -19,7 +19,7 @@ ShortDescription = Summary
 needed = [
     "mock",
     'passlib',
-    "pp-common-db",
+    "pp-db",
     "repoze.who==1.0.19",
     "repoze.what==1.0.9",
     "repoze.what.plugins.ini==0.2.2",

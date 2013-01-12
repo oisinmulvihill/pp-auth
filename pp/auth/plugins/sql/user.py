@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 :mod:`user` --- The API-level access for user entries.
-==================================================================================
+===============================================================================
 
 .. module:: pp.auth.user
    :synopsis:
@@ -10,12 +10,8 @@
 
 .. versionadded::
 
-The :mod:`pp.auth.user` module is the public access to the lower database level.
-
-No access to the :mod:`pp.auth.orm.user` should be allowed outside of testing.
-The majority / all of the business logic should be here and not in the database
-module. Breaking this rule is bad and introduces tight coupling which degrades the
-agility of the code. Don't do it or I'll find you...
+The :mod:`pp.auth.user` module is the public access to the lower database
+level.
 
 """
 import logging
@@ -25,9 +21,9 @@ import logging
 #from sqlalchemy.sql import select
 
 from pp.auth import pwtools
-from pp.common.db import session
-from pp.common.db.utils import generic_has, generic_get, generic_find
-from pp.common.db.utils import generic_update, generic_add, generic_remove
+from pp.db import session
+from pp.db.utils import generic_has, generic_get, generic_find
+from pp.db.utils import generic_update, generic_add, generic_remove
 
 from orm.user_table import UserTable
 

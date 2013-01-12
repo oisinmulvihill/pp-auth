@@ -9,8 +9,8 @@ import logging
 import sqlalchemy
 from sqlalchemy import Column
 
-from pp.common.db import guid
-from pp.common.db import Base
+from pp.db import guid
+from pp.db import Base
 from pp.auth import pwtools
 
 
@@ -23,22 +23,45 @@ class UserTable(Base):
     """
     __tablename__ = 'user'
 
-    id = Column(sqlalchemy.types.String(36), primary_key=True, nullable=False, unique=True)
-    username = Column(sqlalchemy.types.String(200), nullable=False, unique=True)
-    password_hash = Column(sqlalchemy.types.String(), nullable=False, index=False)
-    display_name = Column(sqlalchemy.types.String(), nullable=True, index=True)
-    email = Column(sqlalchemy.types.String(), nullable=True, index=False)
+    id = Column(
+        sqlalchemy.types.String(36),
+        primary_key=True,
+        nullable=False,
+        unique=True
+    )
+    username = Column(
+        sqlalchemy.types.String(200), nullable=False, unique=True
+    )
+    password_hash = Column(
+        sqlalchemy.types.String(), nullable=False, index=False
+    )
+    display_name = Column(
+        sqlalchemy.types.String(), nullable=True, index=True
+    )
+    email = Column(
+        sqlalchemy.types.String(), nullable=True, index=False
+    )
     phone = Column(sqlalchemy.types.String(), nullable=True, index=False)
 
     # This represent a dict
-    json_extra = Column(sqlalchemy.types.String(), nullable=True, default=json.dumps({}), index=False)
+    json_extra = Column(
+        sqlalchemy.types.String(),
+        nullable=True,
+        default=json.dumps({}),
+        index=False
+    )
 
-    def __init__(self, username, password=None, password_hash=None, display_name='', email='', phone='', extra={}):
+    def __init__(
+        self, username, password=None, password_hash=None, display_name='',
+        email='', phone='', extra={}
+    ):
         """Create a User instance in the database.
 
-        :param username: This is the user's unique name used to log into the system.
+        :param username: This is the user's unique name used to log into the
+        system.
 
-        :param password: This is the plain text password, which will be hashed and stored.
+        :param password: This is the plain text password, which will be hashed
+        and stored.
 
         The plain password is NOT stored.
 
@@ -47,7 +70,8 @@ class UserTable(Base):
         If no password and password_hash is given ValueError will be raised as
         one of the fields must be used.
 
-        :param display_name: The text used instead of the unique username (empty by default).
+        :param display_name: The text used instead of the unique username
+        (empty by default).
 
         :param email: An email address for the user (empty by default).
 
@@ -127,7 +151,6 @@ class UserTable(Base):
         def fdel(self):
             """Reset back to empty state, wiping all stored content."""
             self.json_extra = json.dumps({})
-            print "fdel: reset to <%s>" % (type(self.json_extra), self.json_extra)
 
         return locals()
 
@@ -172,7 +195,7 @@ def create():
     """
     get_log().info("create: begin.")
 
-    from pp.common.db import session
+    from pp.db import session
 
     user_dict = dict(
         username="admin",

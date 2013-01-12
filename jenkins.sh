@@ -5,7 +5,7 @@
 # packages to be installed on the system.
 #
 VIRTUALENV=${VIRTUALENV:=virtualenv}
-TMPBUILDDIR=${TMPBUILDDIR:=/tmp/p_`python -c "import uuid;print(str(uuid.uuid4()).replace('-',''))"`}
+TMPBUILDDIR=${TMPBUILDDIR:=pyenv}
 export CHECKOUT_ROOT=`pwd`
 #CHEESESHOP_DIR=${CHEESESHOP_DIR:=/var/www/cheeseshop/httpdocs}
 #export BASKET=${BASKET:="-i http://"}

@@ -5,8 +5,8 @@ Edward Easton, Oisin Mulvihill
 """
 import unittest
 
-from pp.common.db import session, dbsetup
-from pp.common.db import utils
+from pp.db import session, dbsetup
+from pp.db import utils
 
 from pp.auth import pwtools
 from pp.auth.plugins.sql import user
@@ -34,13 +34,15 @@ class UserTC(unittest.TestCase):
         self.session = session()
 
     def tearDown(self):
-        """I don't really bother cleaning up after a test as it useful to aid test debugging,
-        if you use a real database and need to check state after a single test run.
+        """I don't really bother cleaning up after a test as it useful to aid
+        test debugging, if you use a real database and need to check state
+        after a single test run.
         """
         self.session.close()
 
     def testExtraField(self):
-        """Test the arbitrary dic that can be used to store useful fields per user.
+        """Test the arbitrary dic that can be used to store useful
+        fields per user.
         """
         username = 'bob.sprocket'
         plain_pw = '1234567890'
@@ -173,7 +175,9 @@ class UserTC(unittest.TestCase):
         )
         item1 = user.add(**user_dict)
 
-        self.assertEquals(str(item1), "'UserTable <%s>: %s'" % (item1.id, item1.username))
+        self.assertEquals(
+            str(item1), "'UserTable <%s>: %s'" % (item1.id, item1.username)
+        )
 
         # Check the password is converted into a hashed password correctly:
         is_validate = pwtools.validate_password(plain_pw, item1.password_hash)

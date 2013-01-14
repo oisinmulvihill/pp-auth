@@ -23,7 +23,7 @@ from pp.auth import pwtools
 
 
 def get_log():
-    return logging.getLogger('pp.auth.plugins.plain')
+    return logging.getLogger(__name__)
 
 
 def register():

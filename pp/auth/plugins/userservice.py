@@ -69,7 +69,7 @@ class UserServiceAuthenticatorMetadataProvider(object):
             # get_log().info(
             #     "authenticate:  attempting to authenticate <%s>" % login
             # )
-            rc = self.us.user.authenticate(login, password)
+            rc = self.us.api.authenticate(login, password)
 
         except:
             get_log().exception("Authenticate comms error for <%s>: " % login)
@@ -99,7 +99,7 @@ class UserServiceAuthenticatorMetadataProvider(object):
             return
 
         try:
-            result = self.us.user.get(userid)
+            result = self.us.api.get(userid)
 
         except:
             get_log().exception("user recovery failured for <%s>: " % userid)

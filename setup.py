@@ -18,7 +18,7 @@ needed = [
     "mock",
     "passlib",
     "pyparsing==1.5.7",
-#    "pp-db",
+    "pp-db",
     "tokenlib",
     "repoze.who==1.0.19",
     "repoze.what==1.0.9",
